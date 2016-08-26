@@ -8,7 +8,7 @@ logging or ELB logging.
 import os
 import logging
 from threading import Thread
-from Queue import Queue
+from queue import Queue
 from datetime import datetime, timedelta
 from tempfile import NamedTemporaryFile
 from hashlib import sha256
