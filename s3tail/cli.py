@@ -62,7 +62,7 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
         if Track.show_pick_up:
             logger.info('Picked up at line %s', num)
             Track.show_pick_up = False
-        print line
+        click.echo(line)
 
     tail = S3Tail(bucket, prefix, dump,
                   key_handler=progress, bookmark=bookmark,
