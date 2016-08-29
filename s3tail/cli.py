@@ -13,7 +13,7 @@ import logging
 import re
 
 from boto import s3
-from s3tail import S3Tail
+from .s3tail import S3Tail
 
 @click.command()
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
