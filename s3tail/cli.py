@@ -15,6 +15,7 @@ from boto import s3
 from .s3tail import S3Tail
 
 @click.command()
+@click.version_option()
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
               help='AWS region to use when connecting')
 @click.option('-b', '--bookmark', help='Bookmark of last key:line shown')
