@@ -49,17 +49,16 @@ This can then be used to pick up at line ``707`` later on, like this::
      --bookmark production/s3/production-s3-access-2016-08-04-00-20-31-61059F36E0DBF36E:706
 
 It's safe to rerun s3tail sessions when working with piped commands searching for data in the stream
-(e.g. ``grep``). S3tail keeps files in a local file system cache for 24 hours by default, and will
-always read and display from the cache if found before trying to download the content from S3. This
-is all done in a best-effort background thread to avoid impacting performance.
-
-The file cache is stored in the user's ``HOME`` directory, in an ``.s3tailcache`` subdirectory,
-hashed by the S3 keynames using SHA-256 to avoid collisions.
+(e.g. ``grep``). S3tail keeps files in a local file system cache (for 24 hours by default) and will
+always read and display from the cache before downloading from S3. This is done in a best-effort
+background thread to avoid impacting performance. The file cache is stored in the user's ``HOME``
+directory, in an ``.s3tailcache`` subdirectory, where the file names are the S3 keys hashed with
+SHA-256.
 
 To configure access to an AWS S3 bucket, follow the instructions provided by the Boto Python
 interface to AWS: http://boto.cloudhackers.com/en/latest/boto_config_tut.html
 
-Check out ``s3tail --help`` for full usage information.
+Check out ``s3tail --help`` for full usage.
 
 * TODO
 
