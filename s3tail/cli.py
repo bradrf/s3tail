@@ -14,7 +14,8 @@ from boto import s3
 
 from .s3tail import S3Tail
 
-@click.command()
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
               help='AWS region to use when connecting')

@@ -24,6 +24,13 @@ use the \*nix ``tail`` command (with far fewer options, most notably the lack of
 * Documentation: https://s3tail.readthedocs.io.
 
 
+Installation
+------------
+
+::
+   $ pip install s3tail
+
+
 Features
 --------
 
@@ -69,7 +76,7 @@ Check out ``s3tail --help`` for full usage.
     usability
 
 Credits
----------
+-------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project
 template.

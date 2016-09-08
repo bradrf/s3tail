@@ -32,8 +32,8 @@ class Cache(object):
                 self._logger.debug('Found %s in cache: %s', name, cache_pn)
             else:
                 self._logger.info('Found %s in cache', name)
-            reader.close()
             return open(cache_pn)
+        reader.open()
         return Cache._Reader(reader, cache_pn)
 
     def cleanup(self):

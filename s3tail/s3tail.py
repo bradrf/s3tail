@@ -65,7 +65,6 @@ class S3Tail(object):
     def _read(self, key):
         self._buffer = ''
         self._line_num = 0
-        key.open()
         reader = self._cache.open(key.name, key)
         while not reader.closed:
             line = self._next_line(reader)
