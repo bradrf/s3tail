@@ -28,6 +28,7 @@ Installation
 ------------
 
 ::
+
    $ pip install s3tail
 
 
