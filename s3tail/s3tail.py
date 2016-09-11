@@ -6,6 +6,7 @@ logging or ELB logging.
 import os
 import logging
 
+from configparser import SafeConfigParser
 from boto import connect_s3
 from boto.s3 import connect_to_region
 
@@ -16,6 +17,11 @@ class S3Tail(object):
 
     def __init__(self, bucket_name, prefix, line_handler,
                  key_handler=None, bookmark=None, region=None, hours=24):
+        self._logger = logging.getLogger('s3tail')
+        self._config = SafeConfigParser()
+        self._config_fn = os.path.join(os.path.expanduser('~'), '.s3tailrc')
+        if os.path.exists(self._config_fn):
+            self._config.read(self._config_fn)
         self._cache = Cache(os.path.join(os.path.expanduser('~'), '.s3tailcache'), hours)
         if region:
             self._conn = connect_to_region(region)
@@ -25,15 +31,7 @@ class S3Tail(object):
         self._prefix = prefix
         self._line_handler = line_handler
         self._key_handler = key_handler
-        if bookmark:
-            self._bookmark_key, self._bookmark_line_num = bookmark.split(':')
-            if len(self._bookmark_key) == 0:
-                self._bookmark_key = None
-            else:
-                self._bookmark_line_num = int(self._bookmark_line_num)
-        else:
-            self._bookmark_key = None
-            self._bookmark_line_num = 0
+        self._set_bookmark(bookmark)
         self._marker = None
         self._buffer = None
         self._line_num = None
@@ -57,10 +55,53 @@ class S3Tail(object):
             self._marker = key.name # marker always has to be _previous_ entry, not current
 
     def cleanup(self):
+        self._save_bookmark()
         self._cache.cleanup()
 
     ######################################################################
     # private
+
+    _BOOKMARKS = 'bookmarks'
+
+    def _set_bookmark(self, bookmark):
+        self._bookmark_name = None
+        self._bookmark_key = None
+        self._bookmark_line_num = 0
+        if not bookmark:
+            return
+        if ':' in bookmark:
+            # an explicit key:line bookmark
+            self._bookmark_key, self._bookmark_line_num = bookmark.split(':')
+            if len(self._bookmark_key) == 0:
+                self._bookmark_key = None
+            else:
+                self._bookmark_line_num = int(self._bookmark_line_num)
+        else:
+            # a named bookmark
+            self._lookup_bookmark_name(bookmark)
+            self._bookmark_name = bookmark
+
+    def _lookup_bookmark_name(self, name):
+        if self._config.has_section(S3Tail._BOOKMARKS):
+            if self._config.has_option(S3Tail._BOOKMARKS, name):
+                bookmark = self._config.get(S3Tail._BOOKMARKS, name)
+                if bookmark.startswith(self._prefix):
+                    self._logger.debug('Found %s bookmark: %s', name, bookmark)
+                    self._set_bookmark(bookmark)
+                else:
+                    self._logger.warn('Ignoring old %s bookmark (does not match prefix): %s',
+                                      name, bookmark)
+
+    def _save_bookmark(self):
+        if not self._bookmark_name:
+            return
+        if not self._config.has_section(S3Tail._BOOKMARKS):
+            self._config.add_section(S3Tail._BOOKMARKS)
+        bookmark = self.get_bookmark()
+        self._config.set(S3Tail._BOOKMARKS, self._bookmark_name, bookmark)
+        with open(self._config_fn, 'wb') as configfile:
+            self._config.write(configfile)
+        self._logger.debug('Saved %s bookmark: %s', self._bookmark_name, bookmark)
 
     def _read(self, key):
         self._buffer = ''

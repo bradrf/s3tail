@@ -19,13 +19,13 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.version_option()
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
               help='AWS region to use when connecting')
-@click.option('-b', '--bookmark', help='Bookmark of last key:line shown')
+@click.option('-b', '--bookmark', help='Bookmark to start at (key:line or a named bookmark)')
 @click.option('-l', '--log-level', type=click.Choice(['debug','info','warning','error','critical']),
               help='set logging level', default='info')
 @click.option('--log-file', metavar='FILENAME',
               help='write logs to FILENAME', default='STDOUT')
 @click.option('--cache-hours', type=int, default=24,
-              help='Number of hours to keep in cache before removing on next run')
+              help='Number of hours to keep in cache before removing on next run (0 disables caching)')
 @click.argument('s3_uri')
 def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
     '''Begins tailing files found at [s3://]BUCKET[/PREFIX]'''
@@ -68,15 +68,18 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
     tail = S3Tail(bucket, prefix, dump,
                   key_handler=progress, bookmark=bookmark,
                   region=region, hours=cache_hours)
+
     try:
         tail.watch()
+        logger.info('No more logs. Bookmark: %s', tail.get_bookmark())
     except IOError as exc:
         if exc.errno != errno.EPIPE:
             raise
         logger.info('Interrupted pipe. Bookmark: %s', tail.get_bookmark())
-        sys.exit(0) # just exit if piped to something that has terminated (i.e. head or tail)
+        # just exit if piped to something that has terminated (i.e. head or tail)
+    finally:
+        tail.cleanup()
 
-    logger.info('No more logs. Bookmark: %s', tail.get_bookmark())
     sys.exit(0)
 
 if __name__ == '__main__':

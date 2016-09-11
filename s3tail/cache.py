@@ -13,6 +13,10 @@ class Cache(object):
     def __init__(self, path, hours):
         self._logger = logging.getLogger('s3tail.cache')
         self.path = path
+        self.enabled = True
+        if hours < 1:
+            self.enabled = False
+            return
         if not os.path.isdir(path):
             os.mkdir(path)
             # create shard buckets for sha hexstring names
@@ -25,6 +29,9 @@ class Cache(object):
             cleaner.start()
 
     def open(self, name, reader):
+        if not self.enabled:
+            return reader.open()
+
         safe_name = sha256(name).hexdigest()
         cache_pn = os.path.join(self.path, safe_name[0:2], safe_name)
         if os.path.exists(cache_pn):
@@ -32,8 +39,8 @@ class Cache(object):
                 self._logger.debug('Found %s in cache: %s', name, cache_pn)
             else:
                 self._logger.info('Found %s in cache', name)
-            return open(cache_pn)
-        reader.open()
+                return open(cache_pn)
+
         return Cache._Reader(reader, cache_pn)
 
     def cleanup(self):
@@ -54,6 +61,7 @@ class Cache(object):
             self._tempfile = NamedTemporaryFile(dir=head, prefix=tail)
             self._writer = BackgroundWriter(self._tempfile, self._move_into_place)
             self._writer.start()
+            self._reader.open()
             Cache.readers.append(self)
 
         def read(self, size=-1):
