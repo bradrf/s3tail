@@ -2,6 +2,13 @@
 History
 =======
 
+0.1.3 (2016-09-11)
+------------------
+
+* Added "named" bookmarks to pick up automatically from last position when possible.
+* Added option to disable cache entirely.
+
+
 0.1.2 (2016-09-07)
 ------------------
 
