@@ -23,7 +23,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option('-l', '--log-level', type=click.Choice(['debug','info','warning','error','critical']),
               help='set logging level', default='info')
 @click.option('--log-file', metavar='FILENAME',
-              help='write logs to FILENAME', default='STDOUT')
+              help='write logs to FILENAME', default='STDERR')
 @click.option('--cache-hours', type=int, default=24,
               help='Number of hours to keep in cache before removing on next run (0 disables caching)')
 @click.argument('s3_uri')
@@ -34,9 +34,11 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
     bucket, prefix = s3_uri.split('/', 1)
 
     log_kwargs = {
-        'level': getattr(logging, log_level.upper())
+        'level': getattr(logging, log_level.upper()),
+        'format': '[%(asctime)s #%(process)d] %(levelname)-8s %(name)-12s %(message)s',
+        'datefmt': '%Y-%m-%dT%H:%M:%S%z',
     }
-    if log_file != 'STDOUT':
+    if log_file != 'STDERR':
         log_kwargs['filename'] = log_file
     logging.basicConfig(**log_kwargs)
     logger = logging.getLogger('s3tail')

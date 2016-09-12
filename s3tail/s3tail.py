@@ -15,6 +15,10 @@ from .cache import Cache
 class S3Tail(object):
     BUFFER_SIZE = 1 * (1024*1024) # MiB
 
+    class MismatchedPrefix(Exception):
+        '''Indicates when a prefix is provided that does not overlap with the requested bookmark'''
+        pass
+
     def __init__(self, bucket_name, prefix, line_handler,
                  key_handler=None, bookmark=None, region=None, hours=24):
         self._logger = logging.getLogger('s3tail')
@@ -85,15 +89,18 @@ class S3Tail(object):
         if self._config.has_section(S3Tail._BOOKMARKS):
             if self._config.has_option(S3Tail._BOOKMARKS, name):
                 bookmark = self._config.get(S3Tail._BOOKMARKS, name)
+                self._set_bookmark(bookmark)
                 if bookmark.startswith(self._prefix):
                     self._logger.debug('Found %s bookmark: %s', name, bookmark)
-                    self._set_bookmark(bookmark)
                 else:
-                    self._logger.warn('Ignoring old %s bookmark (does not match prefix): %s',
-                                      name, bookmark)
+                    self._prefix = os.path.commonprefix([self._prefix, bookmark])
+                    if len(self._prefix) < 1:
+                        raise S3Tail.MismatchedPrefix("Bookmark %s: %s" % (name, bookmark))
+                    self._logger.warn('Adjusting prefix for %s bookmark to %s: %s',
+                                      name, self._prefix, bookmark)
 
     def _save_bookmark(self):
-        if not self._bookmark_name:
+        if not self._bookmark_name or not self._marker:
             return
         if not self._config.has_section(S3Tail._BOOKMARKS):
             self._config.add_section(S3Tail._BOOKMARKS)
