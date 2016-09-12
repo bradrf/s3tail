@@ -2,4 +2,4 @@
 
 __author__ = 'Brad Robel-Forrest'
 __email__ = 'brad@bitpony.com'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
