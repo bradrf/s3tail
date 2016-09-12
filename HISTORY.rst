@@ -2,6 +2,13 @@
 History
 =======
 
+0.1.4 (2016-09-11)
+------------------
+
+* Fix bug in prefix matching when using named bookmarks.
+* Added timestamps to logs.
+
+
 0.1.3 (2016-09-11)
 ------------------
 
