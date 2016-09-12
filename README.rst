@@ -39,22 +39,35 @@ S3tail downloads and displays the content of files stored in S3, optionally star
 prefix. For example, the following will start dumping all the log file contents found for August the
 fourth in the order S3 provides from that prefix onward::
 
-   $ s3tail s3://my-logs/production/s3/production-s3-access-2016-08-04
+   $ s3tail s3://my-logs/production-s3-access-2016-08-04
 
 When s3tail is stopped or interrupted, it'll print a bookmark to be used to pick up at the exact
 spot following the last log printed in a previous run. Something like the following might be used to
 leverage this ability to continue tailing from a previous stopping point::
 
-   $ s3tail s3://my-logs/production/s3/production-s3-access-2016-08-04
+   $ s3tail s3://my-logs/production-s3-access-2016-08-04
    ...
    ...a-bunch-of-file-output...
    ...
-   INFO:s3tail:Bookmark: production/s3/production-s3-access-2016-08-04-00-20-31-61059F36E0DBF36E:706
+   INFO:s3tail:Bookmark: production-s3-access-2016-08-04-00-20-31-61059F36E0DBF36E:706
 
 This can then be used to pick up at line ``707`` later on, like this::
 
-   $ s3tail s3://my-logs/production/s3/production-s3-access-2016-08-04 \
-     --bookmark production/s3/production-s3-access-2016-08-04-00-20-31-61059F36E0DBF36E:706
+   $ s3tail s3://my-logs/production-s3-access-2016-08-04 \
+     --bookmark production-s3-access-2016-08-04-00-20-31-61059F36E0DBF36E:706
+
+Additionally, it's often useful to let s3tail track where things were left off and pick up at that
+spot without needing to copy and paste the previous bookmark. This is where "named bookmarks" come
+in handy. The examples above could have been reduced to these operations::
+
+  $ s3tail --bookmark my-special-spot s3://my-logs/production-s3-access-2016-08-04
+  ...
+  ^C
+  $ s3tail --bookmark my-special-spot s3://my-logs/production-s3-access
+  Starting production-s3-access-2016-08-04-02-22-32-415AE699C8233AC3
+  Found production-s3-access-2016-08-04-02-22-32-415AE699C8233AC3 in cache
+  Picked up at line 707
+  ...
 
 It's safe to rerun s3tail sessions when working with piped commands searching for data in the stream
 (e.g. ``grep``). S3tail keeps files in a local file system cache (for 24 hours by default) and will
@@ -68,13 +81,6 @@ interface to AWS: http://boto.cloudhackers.com/en/latest/boto_config_tut.html
 
 Check out ``s3tail --help`` for full usage.
 
-* TODO
-
-  * allow for digit ranges to be looked up
-
-  * add ability to expresss bookmark "manually" by setting the actual key of the *CURRENT* file and
-    do search looking for one previous? consider having all bookmarks like this! way better
-    usability
 
 Credits
 -------
