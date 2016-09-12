@@ -63,8 +63,8 @@ GoAccess Example
 A great use for s3tail is as a data provider to the amazing GoAccess_ utility that can provide
 beautiful visualization of traffic logs.
 
-First, build GoAccess_ with the ability track incremental progress in a local database. The following
-works when building on Ubuntu Trusty:
+First, build GoAccess_ with the ability track incremental progress in a local database. The
+following works when building on Ubuntu Trusty:
 
 .. code-block:: console
 
