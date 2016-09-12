@@ -2,7 +2,9 @@
 Usage
 =====
 
-.. code-block:: shell
+.. code-block:: console
+
+    $ s3tail --help
 
     Usage: s3tail [OPTIONS] S3_URI
 
@@ -32,22 +34,22 @@ http://boto.cloudhackers.com/en/latest/boto_config_tut.html
 Basic Console Example
 ---------------------
 
-.. code-block:: shell
+.. code-block:: console
 
-   s3tail s3://my-logs/production-s3-access-2016-08-04
+    $ s3tail s3://my-logs/production-s3-access-2016-08-04
 
 
 Programmatic Example
 --------------------
 
-To use the :class:`s3tail.s3tail.S3Tail` class in a project::
+To use the :class:`.s3tail.S3Tail` class in a project::
 
-    import s3tail
+    from s3tail import S3Tail
 
     def process_line(num, line):
         print '%d: %s' % (num, line)
 
-    tail = S3Tail(bucket, prefix, process_line)
+    tail = S3Tail('my-logs', 'production-s3-access-2016-08-04', process_line)
     tail.watch()
     tail.cleanup()
 
@@ -61,19 +63,24 @@ GoAccess Example
 A great use for s3tail is as a data provider to the amazing GoAccess_ utility that can provide
 beautiful visualization of traffic logs.
 
-First, build GoAccess with the ability track incremental progress in a local database. The following
+First, build GoAccess_ with the ability track incremental progress in a local database. The following
 works when building on Ubuntu Trusty:
 
-.. code-block:: shell
+.. code-block:: console
 
-    wget http://tar.goaccess.io/goaccess-1.0.2.tar.gz
-    sudo apt-get install libgeoip-dev libncursesw5-dev libtokyocabinet-dev libz-dev libbz2-dev
-    ./configure --enable-geoip --enable-utf8 --enable-tcb=btree --with-getline
-    make
-    make install
+    $ wget http://tar.goaccess.io/goaccess-1.0.2.tar.gz
 
-Next, build a configuration file for GoAccess. The ``log-format`` should match nicely with the `S3
-Log Format`_. Drop the following into a file, (e.g. ``~/.goaccessrc_s3``):
+    $ apt-get install libgeoip-dev libncursesw5-dev libtokyocabinet-dev libz-dev libbz2-dev
+
+    $ ./configure --enable-geoip --enable-utf8 --enable-tcb=btree --with-getline
+
+    $ make
+
+    $ make install
+
+Next, build a configuration file for GoAccess_. The ``log-format`` should match nicely with the `S3
+Log Format`_. Many `GoAccess configuration options`_ are available, but the following works quite
+well (e.g. placed in ``~/.goaccessrc_s3``):
 
 .. code-block:: none
 
@@ -89,19 +96,21 @@ Log Format`_. Drop the following into a file, (e.g. ``~/.goaccessrc_s3``):
 Periodically, run something like the following to download and analyze traffic reported into an S3
 bucket. Through the use of s3tail's named bookmark (``goaccess-traffic`` in the example below), each
 successive run will pick up where s3tail left off on the previous run, continuing to read and feed
-logs into GoAccess:
+logs into GoAccess_:
 
-.. code-block:: shell
+.. code-block:: console
 
-   s3tail --log-file /var/log/s3tail.log -b goaccess-traffic my-logs/production-s3-access-2016-08-04 | \
+   $ s3tail --log-file /var/log/s3tail.log -b goaccess-traffic my-logs/production-s3-access-2016-08-04 | \
        goaccess -p ~/.goaccessrc_s3 -o ~/report.json
 
-At any time, GoAccess can let you also view the current dataset in it's wonderful CLI (or check ou
-the live preview options it has!):
+At any time, GoAccess_ can view the current dataset via it's wonderful CLI, generate a self-contained
+HTML report, or make use of the live preview provided via a websocket (e.g. http://rt.goaccess.io/
+is a live demo)!
 
-.. code-block:: shell
+.. code-block:: console
 
-   goaccess -p ~/.goaccessrc_s3
+   $ goaccess -p ~/.goaccessrc_s3
 
 .. _GoAccess: https://goaccess.io/
+.. _GoAccess configuration options: https://github.com/allinurl/goaccess/blob/master/config/goaccess.conf
 .. _S3 Log Format: http://docs.aws.amazon.com/AmazonS3/latest/dev/LogFormat.html
