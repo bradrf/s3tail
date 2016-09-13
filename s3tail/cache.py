@@ -1,3 +1,6 @@
+from builtins import chr
+from builtins import range
+from builtins import object
 import os
 import logging
 
@@ -20,7 +23,7 @@ class Cache(object):
         if not os.path.isdir(path):
             os.mkdir(path)
             # create shard buckets for sha hexstring names
-            chars = range(ord('0'), ord('9')+1) + range(ord('a'), ord('f')+1)
+            chars = list(range(ord('0'), ord('9')+1)) + list(range(ord('a'), ord('f')+1))
             for i in chars:
                 for j in chars:
                     os.mkdir(os.path.join(path, chr(i)+chr(j)))

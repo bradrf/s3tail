@@ -39,8 +39,8 @@ Basic Console Example
     $ s3tail s3://my-logs/production-s3-access-2016-08-04
 
 
-Programmatic Example
---------------------
+Coding Example
+--------------
 
 To use the :class:`.s3tail.S3Tail` class in a project::
 

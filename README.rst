@@ -23,8 +23,7 @@ use the \*nix ``tail`` command (with far fewer options, most notably the lack of
 * Free software: MIT license
 * Documentation: https://s3tail.readthedocs.io.
 
-Simplest install method is via ``pip install s3tail``, but `other methods are available
-<installation.html>`_.
+Simplest install method is via ``pip install s3tail`` (see installation_ for other methods).
 
 
 Features
@@ -79,7 +78,7 @@ background thread to avoid impacting performance. The file cache is stored in th
 directory, in an ``.s3tailcache`` subdirectory, where the file names are the S3 keys hashed with
 SHA-256.
 
-Check out `Usage <usage.html>`_ for more details and examples (like how to leverage GoAccess to
+Check out usage_ for more details and examples (like how to leverage GoAccess to
 generate beautiful traffic reports!).
 
 
@@ -89,5 +88,7 @@ Credits
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project
 template.
 
+.. _installation: http://s3tail.readthedocs.io/en/latest/installation.html#installation
+.. _usage: http://s3tail.readthedocs.io/en/latest/usage.html#usage
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
