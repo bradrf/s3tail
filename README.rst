@@ -23,11 +23,8 @@ use the \*nix ``tail`` command (with far fewer options, most notably the lack of
 * Free software: MIT license
 * Documentation: https://s3tail.readthedocs.io.
 
-
-Installation
-------------
-
-See :doc:`installation`
+Simplest install method is via ``pip install s3tail``, but `other methods are available
+<installation.html>`_.
 
 
 Features
@@ -82,8 +79,8 @@ background thread to avoid impacting performance. The file cache is stored in th
 directory, in an ``.s3tailcache`` subdirectory, where the file names are the S3 keys hashed with
 SHA-256.
 
-Check out :doc:`usage` for more details and examples (like how to leverage GoAccess to generate
-beautiful traffic reports!).
+Check out `Usage <usage.html>`_ for more details and examples (like how to leverage GoAccess to
+generate beautiful traffic reports!).
 
 
 Credits
