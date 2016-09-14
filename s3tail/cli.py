@@ -50,12 +50,6 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
         last_num = None
         show_pick_up = bookmark != None
 
-    def signal_handler(signal, frame):
-        logger.info('Stopped processing at %s:%d', Track.last_key, Track.last_num)
-        logger.info('Bookmark: %s', tail.get_bookmark())
-        sys.exit(0)
-    signal.signal(signal.SIGINT, signal_handler)
-
     def progress(key):
         Track.last_key = key
         logger.info('Starting %s', key)
@@ -72,16 +66,22 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
                   key_handler=progress, bookmark=bookmark,
                   region=region, hours=cache_hours)
 
+    signal.signal(signal.SIGINT, tail.stop)
+    signal.signal(signal.SIGTERM, tail.stop)
+    signal.signal(signal.SIGPIPE, tail.stop)
+
     try:
         tail.watch()
-        logger.info('No more logs. Bookmark: %s', tail.get_bookmark())
+    except KeyboardInterrupt:
+        signal_handler(signal.SIGINT, _)
     except IOError as exc:
-        if exc.errno != errno.EPIPE:
-            raise
-        logger.info('Interrupted pipe. Bookmark: %s', tail.get_bookmark())
+        if exc.errno != errno.EPIPE: raise
         # just exit if piped to something that has terminated (i.e. head or tail)
     finally:
         tail.cleanup()
+
+    logger.info('Stopped processing at %s:%d', Track.last_key, Track.last_num)
+    logger.info('Bookmark: %s', tail.get_bookmark())
 
     sys.exit(0)
 

@@ -31,7 +31,10 @@ class S3Tail(object):
     '''
 
     BUFFER_SIZE = 1 * (1024*1024) # MiB
-    '''Describes the number of bytes to read into memory when parsing lines.'''
+    '''Describes the number of bytes to read into memory when parsing lines.
+
+    At most, three times this value might be read looking for a newline separator.
+    '''
 
     class MismatchedPrefix(Exception):
         '''Indicates when a prefix is provided that does not overlap with the requested bookmark.'''
@@ -73,7 +76,10 @@ class S3Tail(object):
         `line_handler` returns a result (i.e. if it is not ``None``), processessing is terminated
         and the result will be returned from the call to `watch`.
         '''
+        self._stopped = False
         for key in self._bucket.list(prefix=self._prefix, marker=self._bookmark_key):
+            if self._stopped:
+                break
             self._bookmark_key = None
             if self._key_handler:
                 result = self._key_handler(key.name)
@@ -90,6 +96,17 @@ class S3Tail(object):
             return self._marker + ':' + str(self._line_num)
         if self._line_num:
             return ':' + str(self._line_num)
+
+    def stop(self, *args):
+        '''Request that a running watch should terminate processing at the next earliest convenience.
+
+        This can be most useful if the tail is running in a separate thread and/or if the caller is
+        trying to process an interrupt condition (i.e. from a signal or keyboard request). The
+        arguments are ignored and allow this to be directly passed in as a signal handler::
+
+            signal.signal(signal.SIGPIPE, tail.stop)
+        '''
+        self._stopped = True
 
     def cleanup(self):
         '''Wait on any threads remaining and cleanup any unflushed state or configuration.'''
@@ -149,6 +166,8 @@ class S3Tail(object):
         self._line_num = 0
         reader = self._cache.open(key.name, key)
         while not reader.closed:
+            if self._stopped:
+                return self.stop
             line = self._next_line(reader)
             self._line_num += 1
             if self._line_num < self._bookmark_line_num:
