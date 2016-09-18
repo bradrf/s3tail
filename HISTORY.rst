@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.7 (2016-09-18)
+------------------
+
+* Fix incorrect final bookmark when no more logs to read from key.
+
+
 0.1.6 (2016-09-12)
 ------------------
 

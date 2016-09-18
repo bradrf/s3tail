@@ -89,6 +89,7 @@ class S3Tail(object):
             if result is not None:
                 return result
             self._marker = key.name # marker always has to be _previous_ entry, not current
+            self._line_num = 0
 
     def get_bookmark(self):
         '''Get a bookmark to represent the current location.'''
