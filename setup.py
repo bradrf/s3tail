@@ -21,7 +21,7 @@ test_requirements = [
 
 setup(
     name='s3tail',
-    version='0.1.6',
+    version='0.1.7',
     description="Console utility app to retrieve and cat files stored in AWS S3",
     long_description=readme + '\n\n' + history,
     author="Brad Robel-Forrest",
