@@ -82,7 +82,8 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
 
     if Track.last_key and Track.last_num:
         logger.info('Stopped processing at %s:%d', Track.last_key, Track.last_num)
-    logger.info('Bookmark: %s', tail.get_bookmark())
+    if Track.last_key or Track.last_num:
+        logger.info('Bookmark: %s', tail.get_bookmark())
 
     sys.exit(0)
 
