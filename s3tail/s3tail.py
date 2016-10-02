@@ -190,7 +190,6 @@ class S3Tail(object):
             if len(self._buffer) == 0 and reader.closed:
                 return None
             self._logger.warn('Unable to locate newline in %s after line %d', reader.name, self._line_num)
-            raise
             line = self._buffer
             self._buffer = ''
         return line
