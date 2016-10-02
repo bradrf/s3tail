@@ -31,10 +31,10 @@ class S3Tail(object):
     '''
 
     BUFFER_SIZE = 1 * (1024*1024) # MiB
-    '''Describes the number of bytes to read into memory when parsing lines.
+    '''Describes the number of bytes to read into memory when parsing lines.'''
 
-    At most, three times this value might be read looking for a newline separator.
-    '''
+    MAX_BUFFER_SIZE = 5 * BUFFER_SIZE
+    '''Describes the maximum amount of buffer to read into memory when parsing lines.'''
 
     class MismatchedPrefix(Exception):
         '''Indicates when a prefix is provided that does not overlap with the requested bookmark.'''
@@ -170,6 +170,8 @@ class S3Tail(object):
             if self._stopped:
                 return self.stop
             line = self._next_line(reader)
+            if not line: # normal closed reader with nothing else in the buffer
+                break
             self._line_num += 1
             if self._line_num < self._bookmark_line_num:
                 continue
@@ -180,18 +182,34 @@ class S3Tail(object):
         self._bookmark_line_num = 0 # safety in case bookmark count was larger than actual lines
 
     def _next_line(self, reader):
-        i = None
-        for _ in range(0, 3): # try reading up to three times the buffer size
-            i = self._buffer.find("\n")
-            if i > -1:
+        newline = self._find_newline_index(reader)
+        if newline:
+            line = self._buffer[0:newline]
+            self._buffer = self._buffer[newline+1:]
+        else:
+            if len(self._buffer) == 0 and reader.closed:
+                return None
+            self._logger.warn('Unable to locate newline in %s after line %d', reader.name, self._line_num)
+            raise
+            line = self._buffer
+            self._buffer = ''
+        return line
+
+    def _find_newline_index(self, reader):
+        i = self._buffer.find("\n")
+        if i > -1:
+            return i
+        while True:
+            buflen = len(self._buffer)
+            if buflen + S3Tail.BUFFER_SIZE > S3Tail.MAX_BUFFER_SIZE:
                 break
             more_data = reader.read(S3Tail.BUFFER_SIZE)
             if len(more_data) > 0:
                 self._buffer += more_data
+                i = more_data.find("\n")
+                if i > -1:
+                    return buflen + i
             else:
                 reader.close()
-                i = len(self._buffer) + 1 # use remaining info in buffer
                 break
-        line = self._buffer[0:i]
-        self._buffer = self._buffer[i+1:]
-        return line
+        return None

@@ -44,7 +44,7 @@ class Cache(object):
                 self._logger.info('Found %s in cache', name)
                 return open(cache_pn)
 
-        return Cache._Reader(reader, cache_pn)
+        return Cache._Reader(name, reader, cache_pn)
 
     def cleanup(self):
         for reader in Cache.readers:
@@ -54,14 +54,16 @@ class Cache(object):
     # private
 
     class _Reader(object):
-        def __init__(self, reader, cache_pn):
+        def __init__(self, name, reader, cache_pn):
+            self.name = name
             self.closed = False
             self._logger = logging.getLogger('s3tail.cache.reader')
             self._reader = reader
+            self._final_size = reader.size
             self._cache_pn = cache_pn
             # write to a tempfile in case of failure; move into place when writing is complete
             head, tail = os.path.split(cache_pn)
-            self._tempfile = NamedTemporaryFile(dir=head, prefix=tail)
+            self._tempfile = NamedTemporaryFile(dir=head, prefix=tail+'_')
             self._writer = BackgroundWriter(self._tempfile, self._move_into_place)
             self._writer.start()
             self._reader.open()
@@ -83,6 +85,12 @@ class Cache(object):
         def _move_into_place(self, _):
             self._tempfile.delete = False # prevent removal on close
             self._tempfile.close()
-            os.rename(self._tempfile.name, self._cache_pn)
-            Cache.readers.remove(self)
-            self._logger.debug('Placed: %s', self._cache_pn)
+            temp_size = os.path.getsize(self._tempfile.name)
+            if temp_size == self._final_size:
+                os.rename(self._tempfile.name, self._cache_pn)
+                Cache.readers.remove(self)
+                self._logger.debug('Placed: %s', self._cache_pn)
+            else:
+                os.remove(self._tempfile.name)
+                self._logger.debug('Not keeping in cache (expected %d bytes, wrote %d): %s',
+                                   self._final_size, temp_size, self._tempfile.name)

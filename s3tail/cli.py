@@ -15,6 +15,11 @@ from boto import s3
 
 from .s3tail import S3Tail
 
+
+# TODO:
+#  * add option to point at alternate config file
+#  * add all options to config file to allow permanent settings for things like log level and file, etc.
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
@@ -22,10 +27,10 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help='AWS region to use when connecting')
 @click.option('-b', '--bookmark', help='Bookmark to start at (key:line or a named bookmark)')
 @click.option('-l', '--log-level', type=click.Choice(['debug','info','warning','error','critical']),
-              help='set logging level', default='info')
+              help='set logging level', default='info', show_default=True)
 @click.option('--log-file', metavar='FILENAME',
-              help='write logs to FILENAME', default='STDERR')
-@click.option('--cache-hours', type=int, default=24,
+              help='write logs to FILENAME', default='STDERR', show_default=True)
+@click.option('--cache-hours', type=int, default=24, show_default=True,
               help='Number of hours to keep in cache before removing on next run (0 disables caching)')
 @click.argument('s3_uri')
 def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
