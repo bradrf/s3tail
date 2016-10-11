@@ -13,6 +13,7 @@ requirements = [
     'boto>=2.42.0',
     'Click>=6.0',
     'future>=0.15.2',
+    'configstruct>=0.1.0',
 ]
 
 test_requirements = [

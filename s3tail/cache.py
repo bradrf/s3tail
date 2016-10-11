@@ -10,14 +10,16 @@ from tempfile import NamedTemporaryFile
 from .background_writer import BackgroundWriter
 from .old_file_cleaner import OldFileCleaner
 
+_logger = logging.getLogger(__name__)
+
 class Cache(object):
     readers = []
 
     def __init__(self, path, hours):
-        self._logger = logging.getLogger('s3tail.cache')
+        _logger = logging.getLogger('s3tail.cache')
         self.path = path
         self.enabled = True
-        if hours < 1:
+        if not self.path or hours < 1:
             self.enabled = False
             return
         if not os.path.isdir(path):
@@ -38,10 +40,10 @@ class Cache(object):
         safe_name = sha256(name).hexdigest()
         cache_pn = os.path.join(self.path, safe_name[0:2], safe_name)
         if os.path.exists(cache_pn):
-            if self._logger.isEnabledFor(logging.DEBUG):
-                self._logger.debug('Found %s in cache: %s', name, cache_pn)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug('Found %s in cache: %s', name, cache_pn)
             else:
-                self._logger.info('Found %s in cache', name)
+                _logger.info('Found %s in cache', name)
                 return open(cache_pn)
 
         return Cache._Reader(name, reader, cache_pn)
@@ -57,7 +59,7 @@ class Cache(object):
         def __init__(self, name, reader, cache_pn):
             self.name = name
             self.closed = False
-            self._logger = logging.getLogger('s3tail.cache.reader')
+            _logger = logging.getLogger('s3tail.cache.reader')
             self._reader = reader
             self._final_size = reader.size
             self._cache_pn = cache_pn
@@ -89,8 +91,8 @@ class Cache(object):
             if temp_size == self._final_size:
                 os.rename(self._tempfile.name, self._cache_pn)
                 Cache.readers.remove(self)
-                self._logger.debug('Placed: %s', self._cache_pn)
+                _logger.debug('Placed: %s', self._cache_pn)
             else:
                 os.remove(self._tempfile.name)
-                self._logger.debug('Not keeping in cache (expected %d bytes, wrote %d): %s',
+                _logger.debug('Not keeping in cache (expected %d bytes, wrote %d): %s',
                                    self._final_size, temp_size, self._tempfile.name)

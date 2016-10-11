@@ -4,50 +4,62 @@ logging or ELB logging.
 '''
 from builtins import object
 
-import click
+import os
 import sys
 import signal
 import errno
 import logging
 import re
+import click
 
 from boto import s3
+from configstruct import ConfigStruct
 
 from .s3tail import S3Tail
 
-
-# TODO:
-#  * add option to point at alternate config file
-#  * add all options to config file to allow permanent settings for things like log level and file, etc.
+DEFAULTS = {
+    'log_level': 'info',
+    'log_file': 'STDERR',
+    'cache_path': os.path.join(os.path.expanduser('~'), '.s3tailcache'),
+    'cache_hours': 24,
+}
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
+@click.option('-c', '--config-file', type=click.Path(dir_okay=False, writable=True),
+              default=os.path.join(os.path.expanduser('~'), '.s3tailrc'),
+              help='Configuration file', show_default=True)
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
               help='AWS region to use when connecting')
 @click.option('-b', '--bookmark', help='Bookmark to start at (key:line or a named bookmark)')
 @click.option('-l', '--log-level', type=click.Choice(['debug','info','warning','error','critical']),
-              help='set logging level', default='info', show_default=True)
-@click.option('--log-file', metavar='FILENAME',
-              help='write logs to FILENAME', default='STDERR', show_default=True)
-@click.option('--cache-hours', type=int, default=24, show_default=True,
+              help='set logging level')
+@click.option('--log-file', metavar='FILENAME', help='write logs to FILENAME')
+@click.option('--cache-hours', type=int,
               help='Number of hours to keep in cache before removing on next run (0 disables caching)')
 @click.argument('s3_uri')
-def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
+def main(config_file, region, bookmark, log_level, log_file, cache_hours, s3_uri):
     '''Begins tailing files found at [s3://]BUCKET[/PREFIX]'''
+
+    config = ConfigStruct(config_file, options=DEFAULTS)
+    opts = config.options
+
+    # let command line options have temporary precedence if provided values
+    opts.might_prefer(region=region, log_level=log_level, log_file=log_file, cache_hours=cache_hours)
 
     s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
     bucket, prefix = s3_uri.split('/', 1)
 
     log_kwargs = {
-        'level': getattr(logging, log_level.upper()),
+        'level': getattr(logging, opts.log_level.upper()),
         'format': '[%(asctime)s #%(process)d] %(levelname)-8s %(name)-12s %(message)s',
         'datefmt': '%Y-%m-%dT%H:%M:%S%z',
     }
-    if log_file != 'STDERR':
-        log_kwargs['filename'] = log_file
+    if opts.log_file != 'STDERR':
+        log_kwargs['filename'] = opts.log_file
     logging.basicConfig(**log_kwargs)
-    logger = logging.getLogger('s3tail')
+    logger = logging.getLogger(__name__)
 
     class Track(object):
         tail = None
@@ -67,9 +79,9 @@ def main(region, bookmark, log_level, log_file, cache_hours, s3_uri):
             Track.show_pick_up = False
         click.echo(line)
 
-    tail = S3Tail(bucket, prefix, dump,
+    tail = S3Tail(config, bucket, prefix, dump,
                   key_handler=progress, bookmark=bookmark,
-                  region=region, hours=cache_hours)
+                  region=opts.region, cache_path=opts.cache_path, hours=opts.cache_hours)
 
     signal.signal(signal.SIGINT, tail.stop)
     signal.signal(signal.SIGTERM, tail.stop)
