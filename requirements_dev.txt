@@ -1,4 +1,4 @@
-future==0.15.2
+future==0.16.0
 click==6.6
 boto==2.42.0
 pip==8.1.2
