@@ -11,5 +11,5 @@ coverage==4.2
 Sphinx==1.4.8
 cryptography==1.5.2
 PyYAML==3.12
-pytest==3.0.3
+pytest==3.0.4
 configstruct==0.1.0
