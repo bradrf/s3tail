@@ -12,6 +12,33 @@ from boto.s3 import connect_to_region
 
 from .cache import Cache
 
+# TODO: consider ability to search concurrently in cases where the timing isn't important (i.e. i'm
+# just looking for matches, don't care about relative times). this would be faster to get w/
+# multiple threads
+
+# FIXME: control-c'd while tailing into gunzip -c:
+#   File "/usr/local/bin/s3tail", line 11, in <module>
+#     sys.exit(main())
+#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 716, in __call__
+#     return self.main(*args, **kwargs)
+#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 696, in main
+#     rv = self.invoke(ctx)
+#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 889, in invoke
+#     return ctx.invoke(self.callback, **ctx.params)
+#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 534, in invoke
+#     return callback(*args, **kwargs)
+#   File "/usr/local/lib/python2.7/dist-packages/s3tail/cli.py", line 74, in main
+#     tail.watch()
+#   File "/usr/local/lib/python2.7/dist-packages/s3tail/s3tail.py", line 88, in watch
+#     result = self._read(key)
+#   File "/usr/local/lib/python2.7/dist-packages/s3tail/s3tail.py", line 177, in _read
+#     result = self._line_handler(self._line_num, line)
+#   File "/usr/local/lib/python2.7/dist-packages/s3tail/cli.py", line 63, in dump
+#     click.echo(line)
+#   File "/usr/local/lib/python2.7/dist-packages/click/utils.py", line 260, in echo
+#     file.flush()
+# IOError: [Errno 4] Interrupted system call
+
 _logger = logging.getLogger(__name__)
 
 class S3Tail(object):
@@ -144,7 +171,7 @@ class S3Tail(object):
         else:
             self._prefix = os.path.commonprefix([self._prefix, bookmark])
             if len(self._prefix) < 1:
-                raise S3Tail.MismatchedPrefix("Bookmark %s: %s" % (name, bookmark))
+                raise self.MismatchedPrefix("Bookmark %s: %s" % (name, bookmark))
             _logger.warn('Adjusting prefix for %s bookmark to %s: %s',
                               name, self._prefix, bookmark)
 
@@ -157,9 +184,7 @@ class S3Tail(object):
         _logger.debug('Saved %s bookmark: %s', self._bookmark_name, bookmark)
 
     def _read(self, key):
-        self._buffer = ''
-        self._line_num = 0
-        reader = self._cache.open(key.name, key)
+        reader = self._open_reader(key)
         while not reader.closed:
             if self._stopped:
                 return self.stop
@@ -175,6 +200,12 @@ class S3Tail(object):
                 return result
         self._bookmark_line_num = 0 # safety in case bookmark count was larger than actual lines
 
+    def _open_reader(self, key):
+        self._buffer = ''
+        self._line_num = 0
+        return self._cache.open(key.name, key)
+
+    # TODO: convert this into a wrapper that yields lines!
     def _next_line(self, reader):
         newline = self._find_newline_index(reader)
         if newline:
@@ -194,9 +225,9 @@ class S3Tail(object):
             return i
         while True:
             buflen = len(self._buffer)
-            if buflen + S3Tail.BUFFER_SIZE > S3Tail.MAX_BUFFER_SIZE:
+            if buflen + self.BUFFER_SIZE > self.MAX_BUFFER_SIZE:
                 break
-            more_data = reader.read(S3Tail.BUFFER_SIZE)
+            more_data = reader.read(self.BUFFER_SIZE)
             if len(more_data) > 0:
                 self._buffer += more_data
                 i = more_data.find("\n")

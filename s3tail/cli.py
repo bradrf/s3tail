@@ -17,6 +17,13 @@ from configstruct import ConfigStruct
 
 from .s3tail import S3Tail
 
+# TODO: use istty to know when it makes sense for logging to STDERR or just default into a file
+
+# TODO: consider support for reading from multiple buckets?
+
+# TODO: add helper to report if a file is in the cache (i.e. to lookup a key name after sha'd)
+
+
 DEFAULTS = {
     'log_level': 'info',
     'log_file': 'STDERR',
