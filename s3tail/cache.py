@@ -34,13 +34,19 @@ class Cache(object):
             cleaner = OldFileCleaner(path, hours)
             cleaner.start()
 
+    def lookup(self, name):
+        if self.enabled:
+            cache_pn = self._cache_path_for(name)
+            cached = os.path.exists(cache_pn)
+            return (cache_pn, cached)
+        return (None, False)
+
     def open(self, name, reader):
         if not self.enabled:
             return self._open_reader(name, reader)
 
-        safe_name = sha256(name).hexdigest()
-        cache_pn = os.path.join(self.path, safe_name[0:2], safe_name)
-        if os.path.exists(cache_pn):
+        cache_pn, cached = self.lookup(name)
+        if cached:
             if _logger.isEnabledFor(logging.DEBUG):
                 _logger.debug('Found %s in cache: %s', name, cache_pn)
             else:
@@ -56,14 +62,18 @@ class Cache(object):
     ######################################################################
     # private
 
+    def _cache_path_for(self, name):
+        safe_name = sha256(name).hexdigest()
+        return os.path.join(self.path, safe_name[0:2], safe_name)
+
     def _open_reader(self, name, reader):
         reader.open()
         if name.endswith('.gz'): # TODO: lame! use header magic numbers for decompression algorithm
             # return GzipFile(fileobj=reader)
-            return self.Decompressor(reader)
+            return self._Decompressor(reader)
         return reader
 
-    class Decompressor(object):
+    class _Decompressor(object):
         def __init__(self, reader):
             self._reader = reader
             self._decompressor = zlib.decompressobj(32 + zlib.MAX_WBITS)

@@ -80,7 +80,7 @@ class S3Tail(object):
         self._bucket = self._conn.get_bucket(bucket_name)
         self._prefix = prefix
         self._line_handler = line_handler
-        self._key_handler = key_handler
+        self._key_handler = key_handler or (lambda k,c,e: True)
         self._set_bookmark(bookmark)
         self._marker = None
         self._buffer = None
@@ -107,10 +107,10 @@ class S3Tail(object):
             if self._stopped:
                 break
             self._bookmark_key = None
-            if self._key_handler:
-                result = self._key_handler(key.name)
-                if not result:
-                    continue
+            cache_pn, cached = self._cache.lookup(key.name)
+            result = self._key_handler(key.name, cache_pn, cached)
+            if not result:
+                continue
             result = self._read(key)
             if result is not None:
                 return result
