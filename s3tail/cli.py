@@ -18,7 +18,6 @@ from configstruct import ConfigStruct
 from .s3tail import S3Tail
 
 # TODO:
-# * use istty to know when it makes sense for logging to STDERR or just default into a file
 # * consider support for reading from multiple buckets?
 
 DEFAULTS = {

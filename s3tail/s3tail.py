@@ -16,29 +16,6 @@ from .cache import Cache
 # just looking for matches, don't care about relative times). this would be faster to get w/
 # multiple threads
 
-# FIXME: control-c'd while tailing into gunzip -c:
-#   File "/usr/local/bin/s3tail", line 11, in <module>
-#     sys.exit(main())
-#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 716, in __call__
-#     return self.main(*args, **kwargs)
-#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 696, in main
-#     rv = self.invoke(ctx)
-#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 889, in invoke
-#     return ctx.invoke(self.callback, **ctx.params)
-#   File "/usr/local/lib/python2.7/dist-packages/click/core.py", line 534, in invoke
-#     return callback(*args, **kwargs)
-#   File "/usr/local/lib/python2.7/dist-packages/s3tail/cli.py", line 74, in main
-#     tail.watch()
-#   File "/usr/local/lib/python2.7/dist-packages/s3tail/s3tail.py", line 88, in watch
-#     result = self._read(key)
-#   File "/usr/local/lib/python2.7/dist-packages/s3tail/s3tail.py", line 177, in _read
-#     result = self._line_handler(self._line_num, line)
-#   File "/usr/local/lib/python2.7/dist-packages/s3tail/cli.py", line 63, in dump
-#     click.echo(line)
-#   File "/usr/local/lib/python2.7/dist-packages/click/utils.py", line 260, in echo
-#     file.flush()
-# IOError: [Errno 4] Interrupted system call
-
 _logger = logging.getLogger(__name__)
 
 class S3Tail(object):
