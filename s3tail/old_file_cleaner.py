@@ -9,7 +9,6 @@ _logger = logging.getLogger(__name__)
 class OldFileCleaner(Thread):
     def __init__(self, path, hours):
         super(OldFileCleaner, self).__init__()
-        _logger = logging.getLogger('s3tail.old_file_cleaner')
         self._path = path
         self._hours = hours
 
