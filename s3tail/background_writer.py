@@ -25,7 +25,7 @@ class BackgroundWriter(Thread):
 
     def write(self, data):
         if self._done:
-            raise BackgroundWriter.WriteAfterDone('Refusing to write when stopping ' + self.name)
+            raise self.WriteAfterDone('Refusing to write when stopping ' + self.name)
         self._queue.put(data)
 
     def mark_done(self):

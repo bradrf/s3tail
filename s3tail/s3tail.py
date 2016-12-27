@@ -12,6 +12,10 @@ from boto.s3 import connect_to_region
 
 from .cache import Cache
 
+# TODO: consider ability to search concurrently in cases where the timing isn't important (i.e. i'm
+# just looking for matches, don't care about relative times). this would be faster to get w/
+# multiple threads
+
 _logger = logging.getLogger(__name__)
 
 class S3Tail(object):
@@ -53,7 +57,7 @@ class S3Tail(object):
         self._bucket = self._conn.get_bucket(bucket_name)
         self._prefix = prefix
         self._line_handler = line_handler
-        self._key_handler = key_handler
+        self._key_handler = key_handler or (lambda k,c,e: True)
         self._set_bookmark(bookmark)
         self._marker = None
         self._buffer = None
@@ -80,10 +84,10 @@ class S3Tail(object):
             if self._stopped:
                 break
             self._bookmark_key = None
-            if self._key_handler:
-                result = self._key_handler(key.name)
-                if not result:
-                    continue
+            cache_pn, cached = self._cache.lookup(key.name)
+            result = self._key_handler(key.name, cache_pn, cached)
+            if not result:
+                continue
             result = self._read(key)
             if result is not None:
                 return result
@@ -144,7 +148,7 @@ class S3Tail(object):
         else:
             self._prefix = os.path.commonprefix([self._prefix, bookmark])
             if len(self._prefix) < 1:
-                raise S3Tail.MismatchedPrefix("Bookmark %s: %s" % (name, bookmark))
+                raise self.MismatchedPrefix("Bookmark %s: %s" % (name, bookmark))
             _logger.warn('Adjusting prefix for %s bookmark to %s: %s',
                               name, self._prefix, bookmark)
 
@@ -157,9 +161,7 @@ class S3Tail(object):
         _logger.debug('Saved %s bookmark: %s', self._bookmark_name, bookmark)
 
     def _read(self, key):
-        self._buffer = ''
-        self._line_num = 0
-        reader = self._cache.open(key.name, key)
+        reader = self._open_reader(key)
         while not reader.closed:
             if self._stopped:
                 return self.stop
@@ -175,6 +177,12 @@ class S3Tail(object):
                 return result
         self._bookmark_line_num = 0 # safety in case bookmark count was larger than actual lines
 
+    def _open_reader(self, key):
+        self._buffer = ''
+        self._line_num = 0
+        return self._cache.open(key.name, key)
+
+    # TODO: convert this into a wrapper that yields lines!
     def _next_line(self, reader):
         newline = self._find_newline_index(reader)
         if newline:
@@ -194,9 +202,9 @@ class S3Tail(object):
             return i
         while True:
             buflen = len(self._buffer)
-            if buflen + S3Tail.BUFFER_SIZE > S3Tail.MAX_BUFFER_SIZE:
+            if buflen + self.BUFFER_SIZE > self.MAX_BUFFER_SIZE:
                 break
-            more_data = reader.read(S3Tail.BUFFER_SIZE)
+            more_data = reader.read(self.BUFFER_SIZE)
             if len(more_data) > 0:
                 self._buffer += more_data
                 i = more_data.find("\n")
