@@ -17,6 +17,9 @@ from configstruct import ConfigStruct
 
 from .s3tail import S3Tail
 
+# TODO:
+# * consider support for reading from multiple buckets?
+
 DEFAULTS = {
     'log_level': 'info',
     'log_file': 'STDERR',
@@ -38,8 +41,10 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option('--log-file', metavar='FILENAME', help='write logs to FILENAME')
 @click.option('--cache-hours', type=int,
               help='Number of hours to keep in cache before removing on next run (0 disables caching)')
+@click.option('--cache-lookup', is_flag=True,
+              help='Report if s3_uri keys are cached (showing pathnames if found)')
 @click.argument('s3_uri')
-def main(config_file, region, bookmark, log_level, log_file, cache_hours, s3_uri):
+def main(config_file, region, bookmark, log_level, log_file, cache_hours, cache_lookup, s3_uri):
     '''Begins tailing files found at [s3://]BUCKET[/PREFIX]'''
 
     config = ConfigStruct(config_file, options=DEFAULTS)
@@ -67,10 +72,19 @@ def main(config_file, region, bookmark, log_level, log_file, cache_hours, s3_uri
         last_num = None
         show_pick_up = bookmark != None
 
-    def progress(key):
+    def progress(key, cache_pn, cached):
         Track.last_key = key
-        logger.info('Starting %s', key)
-        return True
+        if cache_lookup:
+            prefix = '  => '
+            click.echo(key)
+            if not cached:
+                click.echo(prefix + click.style('NOT IN CACHE', fg='red'))
+            else:
+                click.echo(prefix + click.style(cache_pn, fg='green'))
+            return False
+        else:
+            logger.info('Starting %s', key)
+            return True
 
     def dump(num, line):
         Track.last_num = num
