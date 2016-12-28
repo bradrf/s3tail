@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from setuptools import setup
 
@@ -10,10 +9,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'boto>=2.42.0',
-    'Click>=6.0',
-    'future>=0.15.2',
-    'configstruct>=0.1.0',
+    'boto>=2.45.0',
+    'Click>=6.6',
+    'future>=0.16.0',
+    'configstruct>=0.2.0',
 ]
 
 test_requirements = [
