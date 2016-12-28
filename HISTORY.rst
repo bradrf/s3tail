@@ -5,7 +5,7 @@ History
 0.2.0 (2016-12-27)
 ------------------
 
-* Add gunzip for *.gz files found (based only on extension name for now).
+* Add gunzip for \*.gz files found (based only on extension name for now).
 * Save configuration using ConfigStruct w/ overridable values.
 
 

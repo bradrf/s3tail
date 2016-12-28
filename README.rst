@@ -76,7 +76,25 @@ It's safe to rerun s3tail sessions when working with piped commands searching fo
 always read and display from the cache before downloading from S3. This is done in a best-effort
 background thread to avoid impacting performance. The file cache is stored in the user's ``HOME``
 directory, in an ``.s3tailcache`` subdirectory, where the file names are the S3 keys hashed with
-SHA-256.
+SHA-256. These can be listed by through the use of the ``--cache-lookup`` option:
+
+.. code-block:: console
+
+    $ s3tail --cache-lookup s3://my-logs/production-s3-access-2016-08-04
+
+    my-logs/production-s3-access-2016-08-04-23-20-40-9935D31F89E5E38B
+      => NOT IN CACHE
+    my-logs/production-s3-access-2016-08-04-23-20-45-D76C63A0478F829B
+      => NOT IN CACHE
+    my-logs/production-s3-access-2016-08-04-23-20-51-C14A8D0980A9F562
+      => NOT IN CACHE
+    ...
+    my-logs/production-s3-access-2016-08-04-23-24-02-C9DF441E6B14EFBB
+      => /Users/brad/.s3tailcache/05/0536db5ed3938c0b7fb8d2809bf8b4eb1a686ba14c9dc9b09aafc20780ef0528
+    my-logs/production-s3-access-2016-08-04-23-24-10-E9E55E9019AA46D0
+      => /Users/brad/.s3tailcache/d1/d1c8b060d7c9a59c6387fc93b7a3d42db09ce90df2ed4eb71449e88e010ab4a8
+    my-logs/production-s3-access-2016-08-04-23-24-58-28FE2F9927BCBEA3
+      => /Users/brad/.s3tailcache/46/46de81db7cd618074a8ff24cef938dca0d8353da3af8ccc67f517ba8600c3963
 
 Check out usage_ for more details and examples (like how to leverage GoAccess to
 generate beautiful traffic reports!).

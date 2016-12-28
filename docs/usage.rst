@@ -12,7 +12,9 @@ Usage
 
     Options:
       --version                       Show the version and exit.
-      -r, --region [us-east-1|us-west-1|cn-north-1|ap-northeast-1|ap-southeast-2|sa-east-1|ap-southeast-1|ap-northeast-2|us-west-2|us-gov-west-1|ap-south-1|eu-central-1|eu-west-1]
+      -c, --config-file PATH          Configuration file  [default:
+                                      /Users/brad/.s3tailrc]
+      -r, --region [us-east-1|us-west-1|us-gov-west-1|ap-northeast-2|ap-northeast-1|sa-east-1|eu-central-1|ap-southeast-1|ca-central-1|ap-southeast-2|us-west-2|us-east-2|ap-south-1|cn-north-1|eu-west-1|eu-west-2]
                                       AWS region to use when connecting
       -b, --bookmark TEXT             Bookmark to start at (key:line or a named
                                       bookmark)
@@ -21,14 +23,52 @@ Usage
       --log-file FILENAME             write logs to FILENAME
       --cache-hours INTEGER           Number of hours to keep in cache before
                                       removing on next run (0 disables caching)
+      --cache-lookup                  Report if s3_uri keys are cached (showing
+                                      pathnames if found)
       -h, --help                      Show this message and exit.
 
 
-S3 Access
----------
+Configuration
+-------------
 
 Follow the instructions provided by the Boto Python interface to AWS:
 http://boto.cloudhackers.com/en/latest/boto_config_tut.html
+
+Optionally, following can be configured to override the defaults by editing a configuration
+file. Normally, this file stores bookmark information, but can also include a section for setting
+command line options.
+
+An example might look like this (usually lives in the executing user's ``HOME`` directory as
+``.s3tailrc``):
+
+.. code-block:: ini
+
+    [bookmarks]
+    barf = production/s3/collab-production-s3-access-2016-09-11-02-26-19-718F6332DA1867B6:2935
+    last-look = production/s3/collab-production-s3-access-2016-09-18-21-27-17-79EB845D49F9F7E9:1611
+
+    [options]
+    cache_hours = 1
+    cache_path = /Users/brad/.s3tailcache
+    log_level = warn
+
+Option descriptions:
+
+* ``cache_hours``: Any integer describing the number of hours to keep items in the cache before they
+  are discarded (can be a value of zero to disable the cache entirely).
+
+* ``cache_path``: The full pathname to a directory for storing cached files when downloading from S3.
+
+* ``log_file``: The full pathname to a file for writing all log output (only logs from s3tail;
+  content extracted from S3 files is always written to standard output (``STDOUT``).
+
+* ``log_level``: Any one of ``debug``, ``info``, ``warning``, ``error``, or ``critical``.
+
+* ``region``: The AWS region for accessing S3 (see
+  http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
+
+Any options specified on the command line itself always will have preference over those stated in
+the configuration file.
 
 
 Basic Console Example

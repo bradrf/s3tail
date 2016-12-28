@@ -45,7 +45,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help='Report if s3_uri keys are cached (showing pathnames if found)')
 @click.argument('s3_uri')
 def main(config_file, region, bookmark, log_level, log_file, cache_hours, cache_lookup, s3_uri):
-    '''Begins tailing files found at [s3://]BUCKET[/PREFIX]'''
+    '''Begins tailing files found at [s3://]BUCKET[/PREFIX]
+    (automatically decompressing any ending in ".gz")
+    '''
 
     config = ConfigStruct(config_file, options=DEFAULTS)
     opts = config.options
