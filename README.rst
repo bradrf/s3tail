@@ -76,7 +76,7 @@ It's safe to rerun s3tail sessions when working with piped commands searching fo
 always read and display from the cache before downloading from S3. This is done in a best-effort
 background thread to avoid impacting performance. The file cache is stored in the user's ``HOME``
 directory, in an ``.s3tailcache`` subdirectory, where the file names are the S3 keys hashed with
-SHA-256. These can be listed by through the use of the ``--cache-lookup`` option:
+SHA-256. These can be listed through the use of the ``--cache-lookup`` option:
 
 .. code-block:: console
 

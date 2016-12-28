@@ -82,14 +82,18 @@ Basic Console Example
 Coding Example
 --------------
 
-To use the :class:`.s3tail.S3Tail` class in a project::
+To use the :class:`.s3tail.S3Tail` class in a project:
+
+.. code-block:: python
 
     from s3tail import S3Tail
+    from configparser import ConfigParser
 
     def process_line(num, line):
         print '%d: %s' % (num, line)
 
-    tail = S3Tail('my-logs', 'production-s3-access-2016-08-04', process_line)
+    config = ConfigParser() # stores the bookmarks
+    tail = S3Tail(config, 'my-logs', 'production-s3-access-2016-08-04', process_line)
     tail.watch()
     tail.cleanup()
 
