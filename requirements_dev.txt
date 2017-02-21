@@ -1,6 +1,6 @@
 future==0.16.0
 click==6.7
-boto==2.45.0
+boto==2.46.1
 pip==9.0.1
 bumpversion==0.5.3
 wheel==0.29.0
